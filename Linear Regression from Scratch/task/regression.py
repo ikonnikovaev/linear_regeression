@@ -30,28 +30,34 @@ class CustomLinearRegression:
     def predict(self, X):
         return self.intercept + np.array(X).dot(self.coefficient)
 
+    def r2_score(self, y, yhat):
+        ybar = np.ones(y.shape) * y.mean()
+        err = y - yhat
+        dev = y - ybar
+        return 1 - err.dot(err) / dev.dot(dev)
+
+    def rmse(self, y, yhat):
+        err = y - yhat
+        n = y.shape[0]
+        mse = err.dot(err) / n
+        return np.sqrt(mse)
+
     def coeff_dict(self):
         return {'Intercept': self.intercept,
                 'Coefficient': self.coefficient}
 
-data = np.row_stack((np.arange(4.0, 7.5, 0.5),
-                     np.array([33, 42, 45, 51, 53, 61, 62])))
-df = pd.DataFrame(data.T, columns=['x', 'y'])
-#print(df)
-X = df['x']
-y = np.array(df['y'])
-regressor = CustomLinearRegression()
-regressor.fit(X, y)
-#print(regressor.coeff_dict())
+
+data = np.column_stack((np.array([0.9, 0.5, 1.75, 2.0, 1.4, 1.5, 3.0, 1.1, 2.6, 1.9]),
+                       np.array([11, 11, 9, 8, 7, 7, 6, 5, 5, 4]),
+                       np.array([21.95, 27.18, 16.9, 15.37, 16.03, 18.15, 14.22, 18.72, 15.4, 14.69])))
+df = pd.DataFrame(data, columns=['Capacity', 'Age', 'Cost/ton'])
+
+reg_custom = CustomLinearRegression(fit_intercept=True)
+reg_custom.fit(df[['Capacity', 'Age']], df['Cost/ton'])
+y_pred = reg_custom.predict(df[['Capacity', 'Age']])
+dict = reg_custom.coeff_dict()
+dict['R2'] = reg_custom.r2_score(df['Cost/ton'], y_pred)
+dict['RMSE'] = reg_custom.rmse(df['Cost/ton'], y_pred)
+print(dict)
 
 
-data = np.row_stack((np.arange(4.0, 7.5, 0.5),
-                     np.array([1, -3, 2, 5, 0, 3, 6]),
-                     np.array([11, 15, 12, 9, 18, 13, 16]),
-                     np.array([33, 42, 45, 51, 53, 61, 62])))
-df = pd.DataFrame(data.T, columns=['x', 'w', 'z', 'y'])
-#print(df)
-reg_custom = CustomLinearRegression(fit_intercept=False)
-reg_custom.fit(df[['x', 'w', 'z']], df['y'])
-y_pred = reg_custom.predict(df[['x', 'w', 'z']])
-print(y_pred)
