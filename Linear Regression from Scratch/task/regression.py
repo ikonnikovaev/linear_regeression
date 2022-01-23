@@ -1,6 +1,8 @@
 # write your code here
 import numpy as np
 import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
 
 class CustomLinearRegression:
 
@@ -46,18 +48,26 @@ class CustomLinearRegression:
         return {'Intercept': self.intercept,
                 'Coefficient': self.coefficient}
 
-
-data = np.column_stack((np.array([0.9, 0.5, 1.75, 2.0, 1.4, 1.5, 3.0, 1.1, 2.6, 1.9]),
-                       np.array([11, 11, 9, 8, 7, 7, 6, 5, 5, 4]),
-                       np.array([21.95, 27.18, 16.9, 15.37, 16.03, 18.15, 14.22, 18.72, 15.4, 14.69])))
-df = pd.DataFrame(data, columns=['Capacity', 'Age', 'Cost/ton'])
-
+df = pd.read_csv('data_stage4.csv')
+#print(df)
 reg_custom = CustomLinearRegression(fit_intercept=True)
-reg_custom.fit(df[['Capacity', 'Age']], df['Cost/ton'])
-y_pred = reg_custom.predict(df[['Capacity', 'Age']])
-dict = reg_custom.coeff_dict()
-dict['R2'] = reg_custom.r2_score(df['Cost/ton'], y_pred)
-dict['RMSE'] = reg_custom.rmse(df['Cost/ton'], y_pred)
-print(dict)
+reg_custom.fit(df[['f1', 'f2', 'f3']], df['y'])
+y_pred_custom = reg_custom.predict(df[['f1', 'f2', 'f3']])
+dict1 = reg_custom.coeff_dict()
+dict1['R2'] = reg_custom.r2_score(df['y'], y_pred_custom)
+dict1['RMSE'] = reg_custom.rmse(df['y'], y_pred_custom)
+#print(dict1)
 
+reg_sci = LinearRegression(fit_intercept=True)
+reg_sci.fit(df[['f1', 'f2', 'f3']], df['y'])
+y_pred_sci = reg_sci.predict(df[['f1', 'f2', 'f3']])
+dict2 = {'Intercept': reg_sci.intercept_,
+         'Coefficient': reg_sci.coef_,
+         'R2': r2_score(df['y'], y_pred_custom),
+         'RMSE': np.sqrt(mean_squared_error(df['y'], y_pred_custom))}
+dict3 = {}
+for k in dict2.keys():
+    if k in dict1.keys():
+        dict3[k] = dict2[k] - dict1[k]
+print(dict3)
 
